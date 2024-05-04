@@ -295,6 +295,194 @@ namespace ImageEncryptCompress
             return encryImage;
         }
 
+        public class Node
+        {
+            public short color = -1;
+            public long freq;
+            public Node left;
+            public Node right;
+
+            public Node(short color, long freq, Node left, Node right)
+            {
+                this.color = color;
+                this.freq = freq;
+                this.left = left;
+                this.right = right;
+            }
+            public Node(long freq, Node left, Node right)
+            {
+                this.freq = freq;
+                this.left = left;
+                this.right = right;
+            }
+            public Node(short color, int freq)
+            {
+                this.color = color;
+                this.freq = freq;
+            }
+        }
+        class PriorityQueue
+        {
+            private List<Node> heap = new List<Node>();
+
+            public int Count => heap.Count;
+
+            private void HeapifyUp()
+            {
+                int index = heap.Count - 1;
+                while (index > 0)
+                {
+                    int parentIndex = (index - 1) / 2;
+                    if (heap[parentIndex].freq > heap[index].freq)
+                    {
+                        Swap(parentIndex, index);
+                        index = parentIndex;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            private void HeapifyDown()
+            {
+                int index = 0;
+                while (index < heap.Count)
+                {
+                    int leftChildIndex = 2 * index + 1;
+                    int rightChildIndex = 2 * index + 2;
+                    int smallestChildIndex = index;
+
+                    if (leftChildIndex < heap.Count && heap[leftChildIndex].freq < heap[smallestChildIndex].freq)
+                    {
+                        smallestChildIndex = leftChildIndex;
+                    }
+                    if (rightChildIndex < heap.Count && heap[rightChildIndex].freq < heap[smallestChildIndex].freq)
+                    {
+                        smallestChildIndex = rightChildIndex;
+                    }
+
+                    if (smallestChildIndex != index)
+                    {
+                        Swap(smallestChildIndex, index);
+                        index = smallestChildIndex;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            public void Enqueue(Node node)
+            {
+                heap.Add(node);
+                HeapifyUp();
+            }
+
+            public Node Dequeue()
+            {
+                if (heap.Count == 0)
+                    throw new InvalidOperationException("Priority queue is empty");
+
+                Node minNode = heap[0];
+                heap[0] = heap[heap.Count - 1];
+                heap.RemoveAt(heap.Count - 1);
+                HeapifyDown();
+                return minNode;
+            }
+
+            private void Swap(int i, int j)
+            {
+                Node temp = heap[i];
+                heap[i] = heap[j];
+                heap[j] = temp;
+            }
+        }
+        static public Node buildTree(Dictionary<short, int> colorFreq)
+        {
+            List<Node> nodes = new List<Node>();
+            foreach (var it in colorFreq)
+            {
+                nodes.Add(new Node(it.Key, it.Value));
+            }
+
+            PriorityQueue priorityQueue = new PriorityQueue();
+            foreach (var node in nodes)
+            {
+                priorityQueue.Enqueue(node);
+            }
+
+            while (priorityQueue.Count > 1)
+            {
+                Node left = priorityQueue.Dequeue();
+                Node right = priorityQueue.Dequeue();
+                long newFreq = left.freq + right.freq;
+                Node parent = new Node(newFreq, left, right);
+                priorityQueue.Enqueue(parent);
+            }
+            return priorityQueue.Dequeue();
+        }
+        public static void DFS(Node node, string code, ref long total)
+        {
+            if (node == null)
+                return;
+            if (node.color != -1)
+            {
+                Console.WriteLine($"node color: {node.color} freq: {node.freq}  code: {code} total bits {code.Length * node.freq} ");
+                total += (code.Length * node.freq);
+                return;
+            }
+            DFS(node.left, code + "1", ref total);
+            DFS(node.right, code + "0", ref total);
+        }
+        public static List<Dictionary<short, int>> CalculateColorFrequencies(RGBPixel[,] image)
+        {
+            int x = GetWidth(image);
+            int y = GetHeight(image);
+            Dictionary<short, int> red = new Dictionary<short, int>();
+            Dictionary<short, int> green = new Dictionary<short, int>();
+            Dictionary<short, int> blue = new Dictionary<short, int>();
+            List<Dictionary<short, int>> frequencies = new List<Dictionary<short, int>>();
+            for (int i = 0; i < y; i++)
+            {
+                for (int j = 0; j < x; j++)
+                {
+                    short res = image[i, j].red;
+                    if (red.ContainsKey(res))
+                    {
+                        red[res]++;
+                    }
+                    else
+                    {
+                        red.Add(res, 1);
+                    }
+                    res = image[i, j].green;
+                    if (green.ContainsKey(res))
+                    {
+                        green[res]++;
+                    }
+                    else
+                    {
+                        green.Add(res, 1);
+                    }
+                    res = image[i, j].blue;
+                    if (blue.ContainsKey(res))
+                    {
+                        blue[res]++;
+                    }
+                    else
+                    {
+                        blue.Add(res, 1);
+                    }
+                }
+            }
+            frequencies.Add(red);
+            frequencies.Add(green);
+            frequencies.Add(blue);
+            return frequencies;
+        }
 
     }
 }

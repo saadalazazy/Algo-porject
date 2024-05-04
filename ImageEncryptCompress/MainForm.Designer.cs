@@ -44,6 +44,7 @@ namespace ImageEncryptCompress
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.panel1.SuspendLayout();
@@ -100,19 +101,19 @@ namespace ImageEncryptCompress
             this.label2.Location = new System.Drawing.Point(694, 475);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(191, 24);
+            this.label2.Size = new System.Drawing.Size(182, 24);
             this.label2.TabIndex = 4;
-            this.label2.Text = "Encryption Image";
+            this.label2.Text = "Image Operation";
             // 
             // makeOperation
             // 
             this.makeOperation.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.makeOperation.Location = new System.Drawing.Point(726, 513);
+            this.makeOperation.Location = new System.Drawing.Point(646, 515);
             this.makeOperation.Margin = new System.Windows.Forms.Padding(4);
             this.makeOperation.Name = "makeOperation";
-            this.makeOperation.Size = new System.Drawing.Size(124, 89);
+            this.makeOperation.Size = new System.Drawing.Size(129, 89);
             this.makeOperation.TabIndex = 5;
-            this.makeOperation.Text = "Apply Operation (Example)";
+            this.makeOperation.Text = "Encryption";
             this.makeOperation.UseVisualStyleBackColor = true;
             this.makeOperation.Click += new System.EventHandler(this.makeOperation_Click);
             // 
@@ -217,11 +218,24 @@ namespace ImageEncryptCompress
             this.label8.TabIndex = 21;
             this.label8.Text = "tab";
             // 
+            // button1
+            // 
+            this.button1.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button1.Location = new System.Drawing.Point(844, 516);
+            this.button1.Margin = new System.Windows.Forms.Padding(4);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(135, 89);
+            this.button1.TabIndex = 22;
+            this.button1.Text = "Compration";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1066, 615);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.textBox2);
@@ -268,6 +282,7 @@ namespace ImageEncryptCompress
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Button button1;
     }
 }
 
