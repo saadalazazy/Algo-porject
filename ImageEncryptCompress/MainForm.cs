@@ -43,21 +43,29 @@ namespace ImageEncryptCompress
             List<Dictionary<short, int>> rgbFreq = ImageOperations.CalculateColorFrequencies(ImageMatrix);
             string code = "";
             long[] total = new long[3];
-            Console.WriteLine("Red");
-            ImageOperations.DFS(ImageOperations.buildTree(rgbFreq[0]), code, ref total[0]);
-            Console.WriteLine($"Total: {total[0]}");
-            Console.WriteLine("Green");
-            ImageOperations.DFS(ImageOperations.buildTree(rgbFreq[1]), code, ref total[1]);
-            Console.WriteLine($"Total: {total[1]}");
-            Console.WriteLine("Blue");
-            ImageOperations.DFS(ImageOperations.buildTree(rgbFreq[2]), code, ref total[2]);
-            Console.WriteLine($"Total: {total[2]}");
+            //Console.WriteLine("Red");
+            ImageOperations.Node redRoot = ImageOperations.buildTree(rgbFreq[0]);
+            ImageOperations.Node greenRoot = ImageOperations.buildTree(rgbFreq[1]);
+            ImageOperations.Node blueRoot = ImageOperations.buildTree(rgbFreq[2]);
+            ImageOperations.DFS(redRoot, code, ref total[0], 'r');
+            //Console.WriteLine($"Total: {total[0]}");
+            //Console.WriteLine("Green");
+            ImageOperations.DFS(greenRoot, code, ref total[1], 'g');
+            //Console.WriteLine($"Total: {total[1]}");
+            //Console.WriteLine("Blue");
+            ImageOperations.DFS(blueRoot, code, ref total[2], 'b');
+            //Console.WriteLine($"Total: {total[2]}");
             double totalSum = 0;
             foreach (var it in total)
             {
                 totalSum += it;
             }
-            Console.WriteLine($"Compression Output: {totalSum / 8} bytes");
+            //Console.WriteLine($"Compression Output: {totalSum / 8} bytes");
+            //ImageOperations.TableItration(ImageOperations.redHuffmanTable);
+            //ImageOperations.TableItration(ImageOperations.greenHuffmanTable);
+            //ImageOperations.TableItration(ImageOperations.blueHuffmanTable);
+            //ImageOperations.imageItration(ImageMatrix);
+            ImageOperations.imageItration(ImageOperations.compressedImage(ImageMatrix));
         }
 
 
