@@ -261,8 +261,8 @@ namespace ImageEncryptCompress
         }
         public static key LFSR(String binary, int tap, int N, ref String lastBinary)
         {
-            int initSeed = Convert.ToInt32(binary, 2);
-            int returnValue;
+            long initSeed = Convert.ToInt64(binary, 2);
+            long returnValue;
             key password = new key();
             password.keyRed = "";
             password.keyGreen = "";
@@ -281,7 +281,7 @@ namespace ImageEncryptCompress
             lastBinary = Convert.ToString(initSeed, 2).PadLeft(binary.Length, '0');
             return password;
         }
-        static int getValueBitPosition(int bits, int position)
+        static long getValueBitPosition(long bits, int position)
         {
             bits = bits & (1 << position);
             bits = bits >> position;
@@ -293,15 +293,21 @@ namespace ImageEncryptCompress
             int Width = GetWidth(ImageMatrix);
             RGBPixel[,] encryImage = new RGBPixel[Height, Width];
             String last = "";
+            long initSead = Convert.ToInt64(binary, 2);
+            if (initSead == 0)
+            {
+                return ImageMatrix;
+            }    
             key passwords = LFSR(binary, tap, N, ref last);
+            List<byte> keyValues = new List<byte>();
             for (int i = 0; i < Height;i++)
             {
-                for(int j = 0; j < Width;j++)
+                for (int j = 0; j < Width; j++)
                 {
                     encryImage[i, j].red = (byte)(ImageMatrix[i, j].red ^ Convert.ToByte(passwords.keyRed, 2));
                     encryImage[i, j].green = (byte)(ImageMatrix[i, j].green ^ Convert.ToByte(passwords.keyGreen, 2));
                     encryImage[i, j].blue = (byte)(ImageMatrix[i, j].blue ^ Convert.ToByte(passwords.keyBlue, 2));
-                    passwords = LFSR(last, tap, N,ref last);
+                    passwords = LFSR(last, tap, N, ref last);
                 }
             }
             return encryImage;
@@ -516,7 +522,7 @@ namespace ImageEncryptCompress
             frequencies.Add(blue);
             return frequencies;
         }
-        
+
         public static void TableItration(Dictionary<short, Tuple<long, string>> colorTable)
         {
             foreach(var it in colorTable)

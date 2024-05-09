@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
-
+using System.Diagnostics;
 namespace ImageEncryptCompress
 {
     public partial class MainForm : Form
@@ -17,8 +17,7 @@ namespace ImageEncryptCompress
         }
 
         RGBPixel[,] ImageMatrix;
-        RGBPixel[,] compressImage;
-
+        RGBPixel[,] encryptionImage;
         private void btnOpen_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
@@ -29,31 +28,35 @@ namespace ImageEncryptCompress
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
             }
-            txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
-            txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
         }
-
+        bool isEncrypt = false;
         private void makeOperation_Click(object sender, EventArgs e)
         {
-            RGBPixel[,] encryptionImage = ImageOperations.EncryptionImage(ImageMatrix, textBox1.Text, Int32.Parse(textBox2.Text), 8);
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            encryptionImage = ImageOperations.EncryptionImage(ImageMatrix, textBox1.Text, Int32.Parse(textBox2.Text), 8);
             ImageOperations.DisplayImage(encryptionImage, pictureBox2);
+            checkBox2.Visible = true;
+            checkBox1.Visible = true;
+            isEncrypt = true;
+            TimeSpan elapsedTime = stopwatch.Elapsed;
+            MessageBox.Show($"encryption done with elapsedTime {elapsedTime}");
         }
         ImageOperations.Node redRoot , greenRoot , blueRoot;
 
         private void button1_Click(object sender, EventArgs e)
         {
-            List<Dictionary<short, int>> rgbFreq = ImageOperations.CalculateColorFrequencies(ImageMatrix);
-           /* foreach (var colorDict in rgbFreq)
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            List<Dictionary<short, int>> rgbFreq = null;
+            if (checkBox1.Checked == true || isEncrypt == false)
+                rgbFreq = ImageOperations.CalculateColorFrequencies(ImageMatrix);
+            else if(checkBox2.Checked == true)
             {
-                foreach (var kvp in colorDict)
-                {
-                    short color = kvp.Key;
-                    int frequency = kvp.Value;
+                rgbFreq = ImageOperations.CalculateColorFrequencies(encryptionImage);
+                ImageOperations.DisplayImage(encryptionImage, pictureBox1);
+            }
 
-                    // Do something with the color and its frequency
-                    Console.WriteLine($"Color: {color}, Frequency: {frequency}");
-                }
-            }*/
             redRoot = ImageOperations.buildTree(rgbFreq[0]);
             greenRoot = ImageOperations.buildTree(rgbFreq[1]);
             blueRoot = ImageOperations.buildTree(rgbFreq[2]);
@@ -70,31 +73,33 @@ namespace ImageEncryptCompress
             {
                 totalSum += it;
             }
-           /* Console.WriteLine("Red");
-            ImageOperations.TableItration(ImageOperations.redHuffmanTable);
-            Console.WriteLine($"Total: {total[0]}");
-            Console.WriteLine("Green");
-            ImageOperations.TableItration(ImageOperations.greenHuffmanTable);
-            Console.WriteLine($"Total: {total[1]}");
-            Console.WriteLine("Blue");
-            ImageOperations.TableItration(ImageOperations.blueHuffmanTable);
-            Console.WriteLine($"Total: {total[2]}");
-            Console.WriteLine($"Compression Output: {totalSum / 8} bytes");
-            //ImageOperations.imageItration(ImageMatrix);
-            Console.WriteLine("----------------------");
-            //compressImage = ImageOperations.compressedImage(ImageMatrix);
-            //ImageOperations.imageItration(compressImage);*/
-            MessageBox.Show("compression done");
+            
+            button2.Visible = true;
+            button1.Visible = false;
+            checkBox1.Visible = false;
+            checkBox2.Visible = false;
+            stopwatch.Stop();
+            TimeSpan elapsedTime = stopwatch.Elapsed;
+            MessageBox.Show($"compression done with elapsedTime {elapsedTime} Compretion Image size: {totalSum / 8} byte");
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            RGBPixel[,] compressImage = ImageOperations.decompressionImage(ImageOperations.compressedImage(ImageMatrix),
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            RGBPixel[,] compressImage = null;
+            if (checkBox1.Checked == true || isEncrypt == false)
+                compressImage = ImageOperations.decompressionImage(ImageOperations.compressedImage(ImageMatrix),
                 redRoot, greenRoot, blueRoot);
-            //ImageOperations.getColorFromHuffmanTree()
-            ImageOperations.DisplayImage(compressImage , pictureBox2);
+            else if (checkBox2.Checked == true)
+                compressImage = ImageOperations.decompressionImage(ImageOperations.compressedImage(encryptionImage),
+                redRoot, greenRoot, blueRoot);
 
-            MessageBox.Show("Decompretion done");
+
+            ImageOperations.DisplayImage(compressImage , pictureBox2);
+            TimeSpan elapsedTime = stopwatch.Elapsed;
+            MessageBox.Show($"compression done with elapsedTime {elapsedTime}");
+            button2.Visible = false;
         }
 
  
