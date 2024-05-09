@@ -17,6 +17,10 @@ namespace ImageEncryptCompress
     {
         public byte red, green, blue;
     }
+    public struct RGBPixelStr
+    {
+        public string red, green, blue;
+    }
     public struct RGBPixelD
     {
         public double red, green, blue;
@@ -102,6 +106,10 @@ namespace ImageEncryptCompress
         {
             return ImageMatrix.GetLength(0);
         }
+        public static int GetHeight(RGBPixelStr[,] ImageMatrix)
+        {
+            return ImageMatrix.GetLength(0);
+        }
 
         /// <summary>
         /// Get the width of the image 
@@ -109,6 +117,10 @@ namespace ImageEncryptCompress
         /// <param name="ImageMatrix">2D array that contains the image</param>
         /// <returns>Image Width</returns>
         public static int GetWidth(RGBPixel[,] ImageMatrix)
+        {
+            return ImageMatrix.GetLength(1);
+        }
+        public static int GetWidth(RGBPixelStr[,] ImageMatrix)
         {
             return ImageMatrix.GetLength(1);
         }
@@ -294,6 +306,12 @@ namespace ImageEncryptCompress
             }
             return encryImage;
         }
+
+
+
+
+
+
         public static Dictionary<short, Tuple<long, string>> redHuffmanTable = new Dictionary<short, Tuple<long, string>>();
         public static Dictionary<short, Tuple<long, string>> greenHuffmanTable = new Dictionary<short, Tuple<long, string>>();
         public static Dictionary<short, Tuple<long, string>> blueHuffmanTable = new Dictionary<short, Tuple<long, string>>();
@@ -418,8 +436,8 @@ namespace ImageEncryptCompress
 
             while (priorityQueue.Count > 1)
             {
-                Node left = priorityQueue.Dequeue();
                 Node right = priorityQueue.Dequeue();
+                Node left = priorityQueue.Dequeue();
                 long newFreq = left.freq + right.freq;
                 Node parent = new Node(newFreq, left, right);
                 priorityQueue.Enqueue(parent);
@@ -432,6 +450,7 @@ namespace ImageEncryptCompress
                 return;
             if (node.color != -1)
             {
+                //Console.WriteLine($"Node color: {node.color} freq: {node.freq} code: {code}");
                 if (color == 'r')
                 {
                     redHuffmanTable.Add(node.color, new Tuple<long, string>(node.freq, code));
@@ -442,13 +461,14 @@ namespace ImageEncryptCompress
                 }
                 else if (color == 'b')
                 {
-                    greenHuffmanTable.Add(node.color, new Tuple<long, string>(node.freq, code));
+                    blueHuffmanTable.Add(node.color, new Tuple<long, string>(node.freq, code));
                 }
                 total += (code.Length * node.freq);
+
                 return;
             }
-            DFS(node.left, code + "1", ref total, color);
-            DFS(node.right, code + "0", ref total, color);
+            DFS(node.left,code + "0", ref total, color);
+            DFS(node.right, code + "1", ref total, color);
         }
         public static List<Dictionary<short, int>> CalculateColorFrequencies(RGBPixel[,] image)
         {
@@ -505,21 +525,21 @@ namespace ImageEncryptCompress
             }
         }
 
-        public static RGBPixel[,] compressedImage(RGBPixel[,] image)
+        public static RGBPixelStr[,] compressedImage(RGBPixel[,] image)
         {
             int hight = GetHeight(image);
             int width = GetWidth(image);
-            RGBPixel[,] compimage = new RGBPixel[hight, width];
+            RGBPixelStr[,] compimage = new RGBPixelStr[hight, width];
             for(int i = 0; i< hight; i++)
             {
                 for(int j = 0; j < width; j++)
                 {
                     if(redHuffmanTable.ContainsKey(image[i, j].red))
-                        compimage[i, j].red = (byte)Convert.ToInt32(redHuffmanTable[image[i, j].red].Item2 , 2);
+                        compimage[i, j].red = redHuffmanTable[image[i, j].red].Item2;
                     if(greenHuffmanTable.ContainsKey(image[i, j].green))
-                        compimage[i, j].green = (byte)Convert.ToInt32(greenHuffmanTable[image[i, j].green].Item2 , 2);
+                        compimage[i, j].green = greenHuffmanTable[image[i, j].green].Item2;
                     if(blueHuffmanTable.ContainsKey(image[i, j].blue))
-                        compimage[i, j].blue = (byte)Convert.ToInt32(blueHuffmanTable[image[i, j].blue].Item2 , 2);
+                        compimage[i, j].blue = blueHuffmanTable[image[i, j].blue].Item2;
                 }
             }
             return compimage;
@@ -532,9 +552,75 @@ namespace ImageEncryptCompress
             {
                 for (int j = 0; j < width; j++)
                 {
-                    Console.WriteLine($"{image[i, j].red}, {image[i, j].green}, {image[i, j].blue},");
+                    Console.Write($"{image[i, j].red}, {image[i, j].green}, {image[i, j].blue},");
                 }
+                Console.WriteLine("");
             }
         }
+        public static RGBPixel[,] decompressionImage(RGBPixelStr [,] image , Node redRoot , Node greenRoot , Node blueRoot)
+        {
+            int hight = GetHeight(image);
+            int width = GetWidth(image);
+            RGBPixel[,] correctImage = new RGBPixel[hight,width];
+            Dictionary<string, int> redTable = new Dictionary<string, int>();
+            Dictionary<string, int> greenTable = new Dictionary<string, int>();
+            Dictionary<string, int> blueTable = new Dictionary<string, int>();
+            for (int i = 0; i < hight; i++)
+            {
+                for (int j = 0; j < width; j++)
+                {
+                    if (redTable.ContainsKey(image[i, j].red))
+                    {
+                        correctImage[i, j].red = (byte)redTable[image[i, j].red];
+                    }
+                    else
+                    {
+                        byte correctColorRed = (byte)getColorFromHuffmanTree(image[i, j].red, redRoot);
+                        redTable.Add(image[i, j].red, correctColorRed);
+                        correctImage[i, j].red = correctColorRed;
+                    }
+                    if (greenTable.ContainsKey(image[i, j].green))
+                    {
+                        correctImage[i, j].green = (byte)greenTable[image[i, j].green];
+                    }
+                    else
+                    {
+                        byte correctColorGreen = (byte)getColorFromHuffmanTree(image[i, j].green, greenRoot);
+                        greenTable.Add(image[i, j].green, correctColorGreen);
+                        correctImage[i, j].green = correctColorGreen;
+                    }
+                    if (blueTable.ContainsKey(image[i, j].blue))
+                    {
+                        correctImage[i, j].blue = (byte)blueTable[image[i, j].blue];
+                    }
+                    else
+                    {
+                        byte correctColorBlue = (byte)getColorFromHuffmanTree(image[i, j].blue, blueRoot);
+                        blueTable.Add(image[i, j].blue, correctColorBlue);
+                        correctImage[i, j].blue = correctColorBlue;
+                    }
+                }
+            }
+            return correctImage;
+        }
+        public static short getColorFromHuffmanTree(string binaryCode, Node root)
+        {
+            int i = 0;
+            Node currentNode = root;
+            while(currentNode.color == -1)
+            {
+                if(binaryCode[i] == '1')
+                {
+                    currentNode = currentNode.right;
+                }
+                else
+                {
+                    currentNode = currentNode.left;
+                }
+                i++;
+            }
+            return currentNode.color;
+        }
+
     }
 }
