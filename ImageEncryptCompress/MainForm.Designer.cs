@@ -36,7 +36,6 @@ namespace ImageEncryptCompress
             this.makeOperation = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.textBox1 = new System.Windows.Forms.TextBox();
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
@@ -44,6 +43,7 @@ namespace ImageEncryptCompress
             this.button2 = new System.Windows.Forms.Button();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.checkBox2 = new System.Windows.Forms.CheckBox();
+            this.textBox3 = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.panel1.SuspendLayout();
@@ -139,16 +139,9 @@ namespace ImageEncryptCompress
             this.panel2.Size = new System.Drawing.Size(490, 456);
             this.panel2.TabIndex = 16;
             // 
-            // textBox1
-            // 
-            this.textBox1.Location = new System.Drawing.Point(156, 513);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(100, 24);
-            this.textBox1.TabIndex = 17;
-            // 
             // textBox2
             // 
-            this.textBox2.Location = new System.Drawing.Point(156, 551);
+            this.textBox2.Location = new System.Drawing.Point(156, 554);
             this.textBox2.Name = "textBox2";
             this.textBox2.Size = new System.Drawing.Size(100, 24);
             this.textBox2.TabIndex = 18;
@@ -157,18 +150,18 @@ namespace ImageEncryptCompress
             // 
             this.label7.AutoSize = true;
             this.label7.Font = new System.Drawing.Font("Tahoma", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label7.Location = new System.Drawing.Point(41, 516);
+            this.label7.Location = new System.Drawing.Point(56, 518);
             this.label7.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(108, 21);
+            this.label7.Size = new System.Drawing.Size(93, 21);
             this.label7.TabIndex = 20;
-            this.label7.Text = "Initial Seed";
+            this.label7.Text = "Password";
             // 
             // label8
             // 
             this.label8.AutoSize = true;
             this.label8.Font = new System.Drawing.Font("Tahoma", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.Location = new System.Drawing.Point(111, 554);
+            this.label8.Location = new System.Drawing.Point(111, 556);
             this.label8.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(38, 21);
@@ -197,7 +190,6 @@ namespace ImageEncryptCompress
             this.button2.TabIndex = 23;
             this.button2.Text = "Decompression";
             this.button2.UseVisualStyleBackColor = true;
-            this.button2.Visible = false;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // checkBox1
@@ -222,11 +214,19 @@ namespace ImageEncryptCompress
             this.checkBox2.UseVisualStyleBackColor = true;
             this.checkBox2.Visible = false;
             // 
+            // textBox3
+            // 
+            this.textBox3.Location = new System.Drawing.Point(156, 515);
+            this.textBox3.Name = "textBox3";
+            this.textBox3.Size = new System.Drawing.Size(100, 24);
+            this.textBox3.TabIndex = 26;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1066, 615);
+            this.Controls.Add(this.textBox3);
             this.Controls.Add(this.checkBox2);
             this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.button2);
@@ -234,7 +234,6 @@ namespace ImageEncryptCompress
             this.Controls.Add(this.label8);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.textBox2);
-            this.Controls.Add(this.textBox1);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.makeOperation);
@@ -263,7 +262,6 @@ namespace ImageEncryptCompress
         private System.Windows.Forms.Button makeOperation;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
-        private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label8;
@@ -271,6 +269,7 @@ namespace ImageEncryptCompress
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.CheckBox checkBox2;
+        private System.Windows.Forms.TextBox textBox3;
     }
 }
 

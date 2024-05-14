@@ -4,6 +4,8 @@ using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 ///Algorithms Project
 ///Intelligent Scissors
 ///
@@ -16,10 +18,6 @@ namespace ImageEncryptCompress
     public struct RGBPixel
     {
         public byte red, green, blue;
-    }
-    public struct RGBPixelStr
-    {
-        public string red, green, blue;
     }
     public struct RGBPixelD
     {
@@ -106,10 +104,6 @@ namespace ImageEncryptCompress
         {
             return ImageMatrix.GetLength(0);
         }
-        public static int GetHeight(RGBPixelStr[,] ImageMatrix)
-        {
-            return ImageMatrix.GetLength(0);
-        }
 
         /// <summary>
         /// Get the width of the image 
@@ -117,10 +111,6 @@ namespace ImageEncryptCompress
         /// <param name="ImageMatrix">2D array that contains the image</param>
         /// <returns>Image Width</returns>
         public static int GetWidth(RGBPixel[,] ImageMatrix)
-        {
-            return ImageMatrix.GetLength(1);
-        }
-        public static int GetWidth(RGBPixelStr[,] ImageMatrix)
         {
             return ImageMatrix.GetLength(1);
         }
@@ -287,34 +277,46 @@ namespace ImageEncryptCompress
             bits = bits >> position;
             return bits;
         }
-        public static RGBPixel[,] EncryptionImage(RGBPixel[,] ImageMatrix ,String binary, int tap, int N)
+        public static RGBPixel[,] EncryptionImage(RGBPixel[,] ImageMatrix, string binary, int tap, int N)
         {
             int Height = GetHeight(ImageMatrix);
             int Width = GetWidth(ImageMatrix);
             RGBPixel[,] encryImage = new RGBPixel[Height, Width];
-            String last = "";
-            long initSead = Convert.ToInt64(binary, 2);
-            if (initSead == 0)
-            {
+            string last = "";
+            long initSeed = Convert.ToInt64(binary, 2);
+
+            if (initSeed == 0)
                 return ImageMatrix;
-            }    
-            key passwords = LFSR(binary, tap, N, ref last);
-            List<byte> keyValues = new List<byte>();
-            for (int i = 0; i < Height;i++)
+
+            List<key> passwordsList = new List<key>();
+
+            key initialPasswords = LFSR(binary, tap, N, ref last);
+            passwordsList.Add(initialPasswords);
+            for (int i = 1; i < Height * Width; i++)
+            {
+                key passwords = LFSR(last, tap, N, ref last);
+                
+                if (passwords.Equals(initialPasswords))
+                {
+                    break;
+                }
+                passwordsList.Add(passwords);
+            }
+
+            int passwordIndex = 0;
+            for (int i = 0; i < Height; i++)
             {
                 for (int j = 0; j < Width; j++)
                 {
-                    encryImage[i, j].red = (byte)(ImageMatrix[i, j].red ^ Convert.ToByte(passwords.keyRed, 2));
-                    encryImage[i, j].green = (byte)(ImageMatrix[i, j].green ^ Convert.ToByte(passwords.keyGreen, 2));
-                    encryImage[i, j].blue = (byte)(ImageMatrix[i, j].blue ^ Convert.ToByte(passwords.keyBlue, 2));
-                    passwords = LFSR(last, tap, N, ref last);
+                    encryImage[i, j].red = (byte)(ImageMatrix[i, j].red ^ Convert.ToByte(passwordsList[passwordIndex].keyRed, 2));
+                    encryImage[i, j].green = (byte)(ImageMatrix[i, j].green ^ Convert.ToByte(passwordsList[passwordIndex].keyGreen, 2));
+                    encryImage[i, j].blue = (byte)(ImageMatrix[i, j].blue ^ Convert.ToByte(passwordsList[passwordIndex].keyBlue, 2));
+                    passwordIndex = (passwordIndex + 1) % passwordsList.Count;
                 }
             }
+
             return encryImage;
         }
-
-
-
 
 
 
@@ -345,6 +347,10 @@ namespace ImageEncryptCompress
             {
                 this.color = color;
                 this.freq = freq;
+            }
+            public Node(short color)
+            {
+                this.color = color;
             }
         }
         class PriorityQueue
@@ -531,24 +537,90 @@ namespace ImageEncryptCompress
             }
         }
 
-        public static RGBPixelStr[,] compressedImage(RGBPixel[,] image)
+        public static void compressedImage(RGBPixel[,] image , BinaryWriter writer , long[] total)
         {
             int hight = GetHeight(image);
             int width = GetWidth(image);
-            RGBPixelStr[,] compimage = new RGBPixelStr[hight, width];
-            for(int i = 0; i< hight; i++)
+            StringBuilder redCode = new StringBuilder();
+            StringBuilder greenCode = new StringBuilder();
+            StringBuilder blueCode = new StringBuilder();
+            
+            for (int i = 0; i< hight; i++)
             {
                 for(int j = 0; j < width; j++)
                 {
                     if(redHuffmanTable.ContainsKey(image[i, j].red))
-                        compimage[i, j].red = redHuffmanTable[image[i, j].red].Item2;
+                        redCode.Append(redHuffmanTable[image[i, j].red].Item2);
                     if(greenHuffmanTable.ContainsKey(image[i, j].green))
-                        compimage[i, j].green = greenHuffmanTable[image[i, j].green].Item2;
+                        greenCode.Append(greenHuffmanTable[image[i, j].green].Item2);
                     if(blueHuffmanTable.ContainsKey(image[i, j].blue))
-                        compimage[i, j].blue = blueHuffmanTable[image[i, j].blue].Item2;
+                        blueCode.Append(blueHuffmanTable[image[i, j].blue].Item2);
                 }
             }
-            return compimage;
+            string resultRedCode = redCode.ToString();
+            string resultGreenCode = greenCode.ToString();
+            string resultBlueCode = blueCode.ToString();
+
+            ConvertToASCII(resultRedCode, writer);
+            ConvertToASCII(resultGreenCode, writer);
+            ConvertToASCII(resultBlueCode, writer);
+
+        }
+        static void ConvertToASCII(string bitString, BinaryWriter writer)
+        {
+            int padding = bitString.Length % 8;
+            if (padding != 0)
+                bitString = bitString.PadRight(bitString.Length + (8 - padding), '0');
+
+            for (int i = 0; i < bitString.Length; i += 8)
+            {
+                string byteString = bitString.Substring(i, 8);
+                byte asciiCode = Convert.ToByte(byteString, 2);
+                writer.Write(asciiCode);
+            }
+        }
+        public static string Serialize(Node root)
+        {
+            StringBuilder serializedTree = new StringBuilder();
+            SerializeDFS(root, serializedTree);
+            return serializedTree.ToString();
+        }
+        private static void SerializeDFS(Node node, StringBuilder serializedTree)
+        {
+            if (node.color != (-1))
+            {
+                serializedTree.Append(node.color + ",");
+                return;
+            }
+
+            serializedTree.Append("F" + ",");
+
+            SerializeDFS(node.left, serializedTree);
+            SerializeDFS(node.right, serializedTree);
+        }
+        static int t;
+        public static Node DeserializeHuffmanTree(string data)
+        {
+            if (data == null)
+                return null;
+            t = 0;
+            string[] arr = data.Split(',');
+            return Helper(arr);
+        }
+        private static Node Helper(string[] arr)
+        {
+            if (!arr[t].Equals("F"))
+            {
+                Node node = new Node(short.Parse(arr[t]));
+                return node;
+            }
+
+            Node root = new Node(-1);
+            t++;
+            root.left = Helper(arr);
+            t++;
+            root.right = Helper(arr);
+            return root;
         }
         public static void imageItration(RGBPixel[,] image)
         {
@@ -563,57 +635,12 @@ namespace ImageEncryptCompress
                 Console.WriteLine("");
             }
         }
-        public static RGBPixel[,] decompressionImage(RGBPixelStr [,] image , Node redRoot , Node greenRoot , Node blueRoot)
-        {
-            int hight = GetHeight(image);
-            int width = GetWidth(image);
-            RGBPixel[,] correctImage = new RGBPixel[hight,width];
-            Dictionary<string, int> redTable = new Dictionary<string, int>();
-            Dictionary<string, int> greenTable = new Dictionary<string, int>();
-            Dictionary<string, int> blueTable = new Dictionary<string, int>();
-            for (int i = 0; i < hight; i++)
-            {
-                for (int j = 0; j < width; j++)
-                {
-                    if (redTable.ContainsKey(image[i, j].red))
-                    {
-                        correctImage[i, j].red = (byte)redTable[image[i, j].red];
-                    }
-                    else
-                    {
-                        byte correctColorRed = (byte)getColorFromHuffmanTree(image[i, j].red, redRoot);
-                        redTable.Add(image[i, j].red, correctColorRed);
-                        correctImage[i, j].red = correctColorRed;
-                    }
-                    if (greenTable.ContainsKey(image[i, j].green))
-                    {
-                        correctImage[i, j].green = (byte)greenTable[image[i, j].green];
-                    }
-                    else
-                    {
-                        byte correctColorGreen = (byte)getColorFromHuffmanTree(image[i, j].green, greenRoot);
-                        greenTable.Add(image[i, j].green, correctColorGreen);
-                        correctImage[i, j].green = correctColorGreen;
-                    }
-                    if (blueTable.ContainsKey(image[i, j].blue))
-                    {
-                        correctImage[i, j].blue = (byte)blueTable[image[i, j].blue];
-                    }
-                    else
-                    {
-                        byte correctColorBlue = (byte)getColorFromHuffmanTree(image[i, j].blue, blueRoot);
-                        blueTable.Add(image[i, j].blue, correctColorBlue);
-                        correctImage[i, j].blue = correctColorBlue;
-                    }
-                }
-            }
-            return correctImage;
-        }
-        public static short getColorFromHuffmanTree(string binaryCode, Node root)
+        public static void getColorFromHuffmanTree(RGBPixel[,] image, string binaryCode, Node root , long leanth , long hight ,long width , char type)
         {
             int i = 0;
+            int ptrWidth = 0, ptrHight = 0; 
             Node currentNode = root;
-            while(currentNode.color == -1)
+            while(i != leanth && i != binaryCode.Length)
             {
                 if(binaryCode[i] == '1')
                 {
@@ -624,9 +651,38 @@ namespace ImageEncryptCompress
                     currentNode = currentNode.left;
                 }
                 i++;
+                if(currentNode.color != -1)
+                {
+                    if(type == 'R')
+                    {
+                        image[ptrHight, ptrWidth].red = (byte)currentNode.color;
+                    }
+                    else if(type == 'G')
+                    {
+                        image[ptrHight, ptrWidth].green = (byte)currentNode.color;
+                    }
+                    else if (type == 'B')
+                    {
+                        image[ptrHight, ptrWidth].blue = (byte)currentNode.color;
+                    }
+                    currentNode = root;
+                    ptrWidth++;
+                    if (ptrWidth == width)
+                    {
+                        ptrWidth = 0;
+                        ptrHight++;
+                    }
+                }
             }
-            return currentNode.color;
         }
-
+        public static void PrintTree(Node node, string indent = "")
+        {
+            if (node != null)
+            {
+                Console.WriteLine(indent + $"Color: {node.color}");
+                PrintTree(node.left, indent + "  ");
+                PrintTree(node.right, indent + "  ");
+            }
+        }
     }
 }
